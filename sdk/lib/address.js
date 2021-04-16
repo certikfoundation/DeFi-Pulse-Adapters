@@ -1,12 +1,11 @@
 const { multiCall } = require("./web3");
-const BigNumber = require("bignumber.js");
 const { decimalify } = require("../util");
 
 async function toSymbols(addresses) {
   const queryAddresses = Object.keys(addresses).filter((t) => t !== "0x0000000000000000000000000000000000000000");
   const symbols = (
     await multiCall({
-      abi: "erc20:symbol",
+      abi: "bep20:symbol",
       calls: queryAddresses.map((t) => {
         return { target: t };
       }),
@@ -22,7 +21,7 @@ async function toSymbols(addresses) {
   );
   const decimals = (
     await multiCall(
-      "erc20:decimals",
+      "bep20:decimals",
       queryAddresses.map((t) => {
         return { target: t };
       })
