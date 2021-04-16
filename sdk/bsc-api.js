@@ -8,7 +8,7 @@ const { toSymbols } = require("./lib/address");
 const debug = require("debug")("bsc-api");
 const { providers } = require("@0xsequence/multicall");
 const { providers: ethersProviders } = require("ethers");
-const BigNumber = require("bignumber.js");
+const { decimalify } = require("./util");
 
 if (!process.env.BSC_RPC_URL) {
   throw new Error(`Please set environment variable BSC_RPC_URL`);
@@ -140,7 +140,7 @@ module.exports = {
       });
 
       if (decimals) {
-        output = new BigNumber(output).dividedBy(new BigNumber(10).exponentiatedBy(new BigNumber(decimals))).toString();
+        output = decimalify(output, decimals);
       }
 
       return { callCount, output };
@@ -156,9 +156,7 @@ module.exports = {
       });
 
       if (decimals) {
-        output = output.map((o) =>
-          new BigNumber(o).dividedBy(new BigNumber(10).exponentiatedBy(new BigNumber(decimals))).toString()
-        );
+        output = output.map((o) => decimalify(o, decimals));
       }
 
       return { callCount, output };
@@ -199,7 +197,7 @@ module.exports = {
       let { callCount, output } = await bep20("totalSupply", target);
 
       if (decimals) {
-        output = new BigNumber(output).dividedBy(new BigNumber(10).exponentiatedBy(new BigNumber(decimals))).toString();
+        output = decimalify(output, decimals);
       }
 
       return { callCount, output };
@@ -210,7 +208,7 @@ module.exports = {
       let { callCount, output } = await bep20("balanceOf", target, [owner]);
 
       if (decimals) {
-        output = new BigNumber(output).dividedBy(new BigNumber(10).exponentiatedBy(new BigNumber(decimals))).toString();
+        output = decimalify(output, decimals);
       }
 
       return { callCount, output };

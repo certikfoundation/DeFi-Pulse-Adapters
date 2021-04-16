@@ -1,5 +1,6 @@
 const { multiCall } = require("./web3");
 const BigNumber = require("bignumber.js");
+const { decimalify } = require("../util");
 
 async function toSymbols(addresses) {
   const queryAddresses = Object.keys(addresses).filter((t) => t !== "0x0000000000000000000000000000000000000000");
@@ -35,9 +36,7 @@ async function toSymbols(addresses) {
   );
 
   const result = Object.keys(addresses).reduce((m, t) => {
-    m[symbols[t]] = new BigNumber(addresses[t])
-      .dividedBy(new BigNumber(10).exponentiatedBy(new BigNumber(decimals[t])))
-      .toString();
+    m[symbols[t]] = decimalify(addresses[t], decimals[t]);
     return m;
   }, {});
   return result;

@@ -40,6 +40,10 @@ function SumMultiBalanceOf(balances, results) {
   });
 }
 
+function decimalify(value, decimals) {
+  return new BigNumber(value).dividedBy(new BigNumber(10).exponentiatedBy(new BigNumber(decimals))).toString();
+}
+
 /*==================================================
   Exportsd
   ==================================================*/
@@ -47,4 +51,5 @@ function SumMultiBalanceOf(balances, results) {
 module.exports = {
   sum: Sum,
   sumMultiBalanceOf: SumMultiBalanceOf,
+  decimalify,
 };
