@@ -1,5 +1,4 @@
 const utils = require("web3-utils");
-const _ = require("underscore");
 const { ethers } = require("ethers");
 const debug = require("debug")("web3");
 
@@ -129,27 +128,23 @@ async function singleCall({ web3, limiter, target, abi, block, params }) {
   return { callCount: 1, output: result };
 }
 
-async function multiCall({ multiCallProvider, limiter, target, abi, block, calls }) {
+async function multiCall({ multiCallProvider, target, abi, block, calls }) {
   debug("multiCall", target, abi.name, block, calls);
 
   if (calls.length === 0) return [];
   const templateContract = new ethers.Contract(calls[0]?.target ?? target ?? "", [abi], multiCallProvider);
-  const callChunks = _.chunk(calls, 400);
 
-  const rateLimitedCallChunk = limiter.wrap(async (callChunk) => {
-    return await Promise.allSettled(
-      callChunk.map((call) => {
-        const contract = templateContract.attach(call.target ?? target ?? "");
-        const params = call.params !== undefined ? (Array.isArray(call.params) ? call.params : [call.params]) : [];
-        const resultPromise = contract[abi.name ?? ""](...params, {
-          blockTag: block,
-        });
-        return resultPromise;
-      })
-    );
-  });
-
-  const result = (await Promise.all(callChunks.map(async (callChunk) => await rateLimitedCallChunk(callChunk)))).flat();
+  // multiCallProvider will auto chunk requests and apply rate limit
+  const result = await Promise.allSettled(
+    calls.map((call) => {
+      const contract = templateContract.attach(call.target ?? target ?? "");
+      const params = call.params !== undefined ? (Array.isArray(call.params) ? call.params : [call.params]) : [];
+      const resultPromise = contract[abi.name ?? ""](...params, {
+        blockTag: block,
+      });
+      return resultPromise;
+    })
+  );
 
   if (result.filter((t) => t.status === "rejected").length === result.length) {
     throw new Error("Decoding failed");
@@ -174,7 +169,7 @@ async function multiCall({ multiCallProvider, limiter, target, abi, block, calls
       output: output,
     };
   });
-  return { callCount: Math.ceil(calls.length / 400), output: mappedResults };
+  return { callCount: Math.ceil(calls.length / 500), output: mappedResults };
 }
 
 module.exports = {
